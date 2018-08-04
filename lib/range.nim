@@ -56,11 +56,14 @@ proc getRange*(query: string, length: int, zero: bool): seq[int] =
   var m: Option[RegexMatch]
   if query == ":" or query == "..":
     addAll()
+    return Indices
   m = query.match(re"^-?[0-9]+$"); if m != none(RegexMatch):
     addExactNumber(query.parseInt)
+    return Indices
   m = query.match(re"^(-?[0-9]+)(:|\.\.)$"); if m != none(RegexMatch):
     let first  = m.get.captures[0].parseInt
     addFrom(first)
+    return Indices
   m = query.match(re"^(:|\.\.)(-?[0-9]+)$"); if m != none(RegexMatch):
     let op = m.get.captures[0]
     let second  = m.get.captures[1].parseInt
@@ -68,6 +71,7 @@ proc getRange*(query: string, length: int, zero: bool): seq[int] =
       addUntil(second-1)
     elif op == "..":
       addUntil(second)
+    return Indices
   m = query.match(re"^(-?[0-9]+)(:|\.\.)(-?[0-9]+)$"); if m != none(RegexMatch):
     let op = m.get.captures[1]
     let first  = m.get.captures[0].parseInt
@@ -79,14 +83,17 @@ proc getRange*(query: string, length: int, zero: bool): seq[int] =
         addFromtTo(first, second-1)
     elif op == "..":
       addFromtTo(first, second)
+    return Indices
   m = query.match(re"^%([0-9]+)$"); if m != none(RegexMatch):
     let first  = m.get.captures[0].parseInt
     addModulo(first, 0)
+    return Indices
   m = query.match(re"^%([0-9]+)==?([0-9]+)$"); if m != none(RegexMatch):
     let first  = m.get.captures[0].parseInt
     let second = m.get.captures[1].parseInt
     addModulo(first, second)
+    return Indices
   m = query.match(re"^[\s-0-9]+$"); if m != none(RegexMatch):
     addEach(query)
-  return Indices
+    return Indices
 
