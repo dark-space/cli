@@ -1,5 +1,5 @@
 import strutils, tables, parseopt, sets, nre
-import lib/io
+import lib/io, lib/range
 
 var args: seq[string] = @[]
 var opts = initTable[string,string]()
@@ -7,8 +7,8 @@ var opts = initTable[string,string]()
 proc usage() =
   let s = """
 Usage: line [OPTION]... PATTERN [FILE]
-  -0    : index starts with 0.
-  -v    : invert match.
+  -0      : index starts with 0.
+  -v      : invert match.
   -B=<int>: also show before n lines.
   -A=<int>: also show after n lines.
   -C=<int>: also show before and after n+n lines."""
@@ -42,20 +42,14 @@ except:
 if args.len < 1:
   args.add(":")
 
+proc expandContext()
+proc print()
 
+let query = args[0]; args.delete(0)
 let lines = read(args).split("\n")
-var indices: seq[int] = @[]
+var indices = getRange(query, lines.len, opts.contains("zero"))
+print()
 
-proc toIndex(n: int): int =
-  if n == 0:
-    return 0
-  elif n > 0:
-    if opts.contains("zero"):
-      return n
-    else:
-      return n-1
-  elif n < 0:
-    return lines.len + n
 
 proc expandContext() =
   var array: seq[int] = @[]
@@ -83,88 +77,4 @@ proc print() =
     for i in 0 .. lines.len-1:
       if not excludes.contains(i):
         echo lines[i]
-  quit(0)
-
-proc append(n: int) =
-  indices.add(n)
-
-
-proc printAll() =
-  for n in 0 .. lines.len-1:
-    append(n)
-  print()
-
-proc printExactNumber(n: int) =
-  append(n.toIndex)
-  print()
-
-proc printFrom(start: int) =
-  for n in start.toIndex .. lines.len-1:
-    append(n)
-  print()
-
-proc printUntil(last: int) =
-  for n in 0.toIndex .. last.toIndex:
-    append(n)
-  print()
-
-proc printFromtTo(start: int, last: int) =
-  for n in start.toIndex .. last.toIndex:
-    append(n)
-  print()
-
-proc printModulo(num: int, modulo: int) =
-  if opts.contains("zero"):
-    for i in 0 .. lines.len-1:
-      if i mod num == modulo:
-        append(i)
-  else:
-    for i in 1 .. lines.len:
-      if i mod num == modulo:
-        append(i-1)
-  print()
-
-proc printEach(query: string) =
-  for i in query.split(re"[,\s]+"):
-    append(i.parseInt.toIndex)
-  print()
-
-let query = args[0]
-var m: Option[RegexMatch]
-if query == ":" or query == "..":
-  printAll()
-m = query.match(re"^-?[0-9]+$"); if m != none(RegexMatch):
-  printExactNumber(query.parseInt)
-m = query.match(re"^(-?[0-9]+)(:|\.\.)$"); if m != none(RegexMatch):
-  let first  = m.get.captures[0].parseInt
-  printFrom(first)
-m = query.match(re"^(:|\.\.)(-?[0-9]+)$"); if m != none(RegexMatch):
-  let op = m.get.captures[0]
-  let second  = m.get.captures[1].parseInt
-  if op == ":":
-    printUntil(second-1)
-  elif op == "..":
-    printUntil(second)
-m = query.match(re"^(-?[0-9]+)(:|\.\.)(-?[0-9]+)$"); if m != none(RegexMatch):
-  let op = m.get.captures[1]
-  let first  = m.get.captures[0].parseInt
-  let second = m.get.captures[2].parseInt
-  if op == ":":
-    if second == 0:
-      printFromtTo(first, 0)
-    else:
-      printFromtTo(first, second-1)
-  elif op == "..":
-    printFromtTo(first, second)
-m = query.match(re"^%([0-9]+)$"); if m != none(RegexMatch):
-  let first  = m.get.captures[0].parseInt
-  printModulo(first, 0)
-m = query.match(re"^%([0-9]+)==?([0-9]+)$"); if m != none(RegexMatch):
-  let first  = m.get.captures[0].parseInt
-  let second = m.get.captures[1].parseInt
-  printModulo(first, second)
-m = query.match(re"^[\s-0-9]+$"); if m != none(RegexMatch):
-  printEach(query)
-usage()
-quit(1)
 
