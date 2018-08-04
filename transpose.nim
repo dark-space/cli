@@ -7,10 +7,10 @@ var opts = initTable[string,string]()
 proc usage() =
   let s = """
 Usage: transpose [OPTION]... [FILE]
-  -d <str>: delimiter; default=\"\t\".
+  -d <str>: delimiter; default="\t".
   -r    : regex delimiter str.
   -C    : delimtier=",".
-  -S    : use regex delimiter=\"\s+\"."""
+  -S    : use regex delimiter="\s+"."""
   echo s
 
 var delimiter = "\t"
