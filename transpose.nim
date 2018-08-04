@@ -44,6 +44,6 @@ for y in 0..<data[0].len:
   var str = ""
   for x in 0..<data.len:
     str &= data[x][y]
-    str &= ","
+    str &= delimiter
   echo str[0..str.len-delimiter.len-1]
 
