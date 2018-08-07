@@ -7,7 +7,7 @@ type SortedSet*[T] = ref object of RootObj
   s: seq[T]
   g: HashSet[T]
 
-proc search(a: openArray[int], x: int): int =
+proc search[T](a: openArray[T], x: T): int =
   var left  = 0
   var right = a.len-1
   while true:
@@ -38,5 +38,4 @@ proc get*[T](this: SortedSet[T], i: int): T =
 
 proc `[]`*[T](this: SortedSet[T], i: int): T =
   return this.s[i]
-
 
