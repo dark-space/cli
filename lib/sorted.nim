@@ -40,17 +40,17 @@ proc `[]`*[T](this: SortedSet[T], i: int): T {.inline.} =
   return this.s[i]
 
 
-###############
-#[ SortedMap ]#
-###############
-type SortedMap*[K,V] = object
+#################
+#[ SortedTable ]#
+#################
+type SortedTable*[K,V] = object
   s: seq[K]
   g: Table[K,V]
 
-proc initSortedMap*[K,V](): SortedMap[K,V] =
-  return SortedMap[K,V](s: @[], g: initTable[K,V]())
+proc initSortedTable*[K,V](): SortedTable[K,V] =
+  return SortedTable[K,V](s: @[], g: initTable[K,V]())
 
-proc `[]=`*[K,V](this: var SortedMap[K,V], x: K, y: V) {.inline.} =
+proc `[]=`*[K,V](this: var SortedTable[K,V], x: K, y: V) {.inline.} =
   if this.g.contains(x):
     return
   this.g[x] = y
@@ -59,9 +59,9 @@ proc `[]=`*[K,V](this: var SortedMap[K,V], x: K, y: V) {.inline.} =
   else:
     this.s.insert(x, search(this.s, x))
 
-proc get*[K,V](this: SortedMap[K,V], k:K): V {.inline.} =
+proc get*[K,V](this: SortedTable[K,V], k:K): V {.inline.} =
   return this.g[k]
 
-proc `[]`*[K,V](this: SortedMap[K,V], i: int): V {.inline.} =
+proc `[]`*[K,V](this: SortedTable[K,V], i: int): V {.inline.} =
   return this.g[this.s[i]]
 
