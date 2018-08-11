@@ -33,11 +33,20 @@ proc incl*[T](this: var SortedSet[T], x: T) {.inline.} =
   else:
     this.s.insert(x, search(this.s, x))
 
+proc contains*[T](this: SortedSet[T], k: T): bool {.inline.} =
+  return this.g.contains(k)
+
 proc get*[T](this: SortedSet[T], i: int): T {.inline.} =
   return this.s[i]
 
 proc `[]`*[T](this: SortedSet[T], i: int): T {.inline.} =
   return this.s[i]
+
+iterator items*[T](this: SortedSet[T]): T =
+  var i = 0
+  while i < this.s.len:
+    yield this.s[i]
+    i += 1
 
 
 #################
@@ -45,23 +54,47 @@ proc `[]`*[T](this: SortedSet[T], i: int): T {.inline.} =
 #################
 type SortedTable*[K,V] = object
   s: seq[K]
-  g: Table[K,V]
+  t: Table[K,V]
 
 proc initSortedTable*[K,V](): SortedTable[K,V] =
-  return SortedTable[K,V](s: @[], g: initTable[K,V]())
+  return SortedTable[K,V](s: @[], t: initTable[K,V]())
 
 proc `[]=`*[K,V](this: var SortedTable[K,V], x: K, y: V) {.inline.} =
-  if this.g.contains(x):
+  if this.t.contains(x):
     return
-  this.g[x] = y
+  this.t[x] = y
   if this.s.len <= 0:
     this.s.add(x)
   else:
     this.s.insert(x, search(this.s, x))
 
-proc get*[K,V](this: SortedTable[K,V], k:K): V {.inline.} =
-  return this.g[k]
+proc contains*[K,V](this: SortedTable[K,V], k: K): bool {.inline.} =
+  return this.t.contains(k)
 
-proc `[]`*[K,V](this: SortedTable[K,V], i: int): V {.inline.} =
-  return this.g[this.s[i]]
+proc get*[K,V](this: SortedTable[K,V], k: K): V {.inline.} =
+  return this.t[k]
+
+proc `[]`*[K,V](this: SortedTable[K,V], k: K): V {.inline.} =
+  return this.t[k]
+
+proc getAt*[K,V](this: SortedTable[K,V], i: int): V {.inline.} =
+  return this.t[this.s[i]]
+
+iterator pairs*[K,V](this: SortedTable[K,V]): (K,V) =
+  var i = 0
+  while i < this.s.len:
+    yield (this.s[i], this.t[this.s[i]])
+    i += 1
+
+iterator keys*[K,V](this: SortedTable[K,V]): K =
+  var i = 0
+  while i < this.s.len:
+    yield this.s[i]
+    i += 1
+
+iterator values*[K,V](this: SortedTable[K,V]): V =
+  var i = 0
+  while i < this.s.len:
+    yield this.t[this.s[i]]
+    i += 1
 
