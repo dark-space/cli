@@ -1,15 +1,27 @@
-type Elem[T] = ref object
-  next: Elem[T]
-  prev: Elem[T]
+type Element[T] = ref object
+  next: Element[T]
+  prev: Element[T]
   data: T
 
 type LinkedList*[T] = ref object
-  first: Elem[T]
-  last:  Elem[T]
+  first: Element[T]
+  last:  Element[T]
   length: int
 
+proc nthElement[T](l: LinkedList[T], n: int): Element[T] =
+  var e: Element[T]
+  if n < int(l.length/2):
+    e = l.first
+    for i in 1 ..< n:
+      e = e.next
+  else:
+    e = l.last
+    for i in n .. l.length-1:
+      e = e.prev
+  return e
+
 proc insert*[T](l: LinkedList[T], x: T, n: int) =
-  let p = Elem[T](data: x)
+  let p = Element[T](data: x)
   if n == 0:
     if l.length == 0:
       l.first = p
@@ -23,9 +35,7 @@ proc insert*[T](l: LinkedList[T], x: T, n: int) =
     l.last.next = p
     l.last = p
   else:
-    var e = l.first
-    for i in 1 ..< n:
-      e = e.next
+    let e = nthElement(l, n-1)
     p.next = e.next
     p.prev = e
     e.next = p
@@ -46,9 +56,7 @@ proc remove*[T](l: LinkedList[T], n: int) =
     l.last = l.last.prev
     l.last.next = nil
   else:
-    var e = l.first
-    for i in 1 .. n:
-      e = e.next
+    let e = nthElement(l, n)
     e.prev.next = e.next
     e.next.prev = e.prev
   l.length -= 1
@@ -68,9 +76,7 @@ proc extract*[T](l: LinkedList[T], n: int): T =
     l.last = l.last.prev
     l.last.next = nil
   else:
-    var e = l.first
-    for i in 1 .. n:
-      e = e.next
+    let e = nthElement(l, n)
     x = e.next.data
     e.prev.next = e.next
     e.next.prev = e.prev
@@ -84,10 +90,7 @@ proc pop*[T](l: LinkedList[T]): T =
   l.extract(l.length - 1)
 
 proc get*[T](l: LinkedList[T], n: int): T =
-  var e = l.first
-  for i in 1 .. n:
-    e = e.next
-  return e.data
+  return nthElement(l, n)
 
 proc `[]`*[T](l: LinkedList[T], n: int): T =
   return l.get(n)
