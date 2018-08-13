@@ -16,9 +16,9 @@ if [ $# -gt 0 ] && [ "$1" = "--commit" ]; then
     oldfile=$(tail -n 1 download-bin.sh | awk '{print $3}')
     git rm $oldfile 2>/dev/null || rm -f $oldfile
     tarfile=bin.$(date +%Y%m%d).tar.gz
-    tar cvf $tarfile bin
-    git add $tarfile
-    git commit -m "$tarfile"
     sed -i "s/$oldfile/$tarfile/g" download-bin.sh
+    tar cvf $tarfile bin
+    git add $tarfile download-bin.sh
+    git commit -m "$tarfile"
 fi
 
