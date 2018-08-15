@@ -9,7 +9,7 @@ for f in *.nim; do
 done
 
 if [ $# -gt 0 ] && [ "$1" = "--commit" ]; then
-    if git status -s | grep '^[AM]. ' 2>/dev/null; then
+    if git status -s | grep '^[A-Z]. ' 2>/dev/null; then
         echo "[ERROR] Some files are added"
         return
     fi
