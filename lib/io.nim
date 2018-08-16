@@ -11,3 +11,14 @@ proc read*(files: seq[string]): string =
 proc read*(file: string): string =
   return read(@[file])
 
+proc readRaw*(files: seq[string]): string =
+  if files.len < 1 or files[0] == "-":
+    return readAll(stdin)
+  else:
+    let f = open(files[0], FileMode.fmRead)
+    defer: f.close()
+    return f.readAll()
+
+proc readRaw*(file: string): string =
+  return readRaw(@[file])
+
