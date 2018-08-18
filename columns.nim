@@ -1,4 +1,4 @@
-import strutils, tables, parseopt, sets, nre
+import strutils, tables, parseopt, sets, nre, os
 import lib/table, lib/io, lib/range
 
 proc usage() =
@@ -12,16 +12,28 @@ Usage: line [OPTION]... PATTERN [FILE]
   -S      : use regex delimiter="\s+"."""
   echo s
 
+var args: seq[string] = @[]
+
 var delimiter = "\t"
 var regex = false
 var zero = false
 var invert = false
 
-var args: seq[string] = @[]
+var tmpArgs: seq[string] = @[]
+for a in os.commandLineParams():
+  if a != "-0" and a.match(re"^-[0-9]") != none(RegexMatch):
+    tmpArgs.add("" & a)
+  else:
+    tmpArgs.add(a)
+
 try:
-  for kind, key, val in getopt():
+  var p = initOptParser(tmpArgs)
+  for kind, key, val in getopt(p):
     if kind == cmdArgument:
-      args.add(key)
+      if key.match(re"^-[0-9]") != none(RegexMatch):
+        args.add(key[1..key.len-1])
+      else:
+        args.add(key)
     elif kind == cmdShortOption and key == "0":
       zero = true
     elif (kind == cmdShortOption and key == "v") or (kind == cmdLongOption and key == "invert"):
@@ -45,6 +57,7 @@ if args.len < 1:
   args.add(":")
 
 let query = args[0]; args.delete(0)
+echo "query = ", query
 let lines = read(args).split("\n")
 let data = getMatrix(lines, delimiter, regex)
 var indices = getRange(query, data[0].len, zero)
