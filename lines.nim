@@ -1,8 +1,5 @@
-import strutils, tables, parseopt, sets, nre
+import strutils, tables, parseopt, sets, nre, os
 import lib/io, lib/range
-
-var args: seq[string] = @[]
-var opts = initTable[string,string]()
 
 proc usage() =
   let s = """
@@ -14,25 +11,41 @@ Usage: line [OPTION]... PATTERN [FILE]
   -C=<int>: also show before and after n+n lines."""
   echo s
 
+var args: seq[string] = @[]
+
+var zero = false
+var invert = false
+var before = 0
+var after = 0
+
+var tmpArgs: seq[string] = @[]
+for a in os.commandLineParams():
+  if a != "-0" and a.match(re"^-[0-9]") != none(RegexMatch):
+    tmpArgs.add("" & a)
+  else:
+    tmpArgs.add(a)
+
 try:
-  for kind, key, val in getopt():
+  var p = initOptParser(tmpArgs)
+  for kind, key, val in getopt(p):
     if kind == cmdArgument:
-      args.add(key)
+      if key.match(re"^-[0-9]") != none(RegexMatch):
+        args.add(key[1..key.len-1])
+      else:
+        args.add(key)
     elif kind == cmdShortOption and key == "0":
-      opts["zero"] = ""
-    elif kind == cmdShortOption and key.match(re"^[0-9]") != none(RegexMatch):
-      args.add("-" & key & ":" & val)
+      zero = true
     elif (kind == cmdShortOption and key == "v") or (kind == cmdLongOption and key == "invert"):
-      opts["invert"] = ""
+      invert = true
     elif (kind == cmdShortOption and key == "C") or (kind == cmdLongOption and key == "context"):
-      if not opts.contains("before"):
-        opts["before"] = val
-      if not opts.contains("after"):
-        opts["after"] = val
+      if before == 0:
+        before = val.parseInt
+      if after == 0:
+        after = val.parseInt
     elif (kind == cmdShortOption and key == "B") or (kind == cmdLongOption and key == "before"):
-      opts["before"] = val
+      before = val.parseInt
     elif (kind == cmdShortOption and key == "A") or (kind == cmdLongOption and key == "after"):
-      opts["after"] = val
+      after = val.parseInt
     else:
       usage()
       quit(0)
@@ -47,29 +60,26 @@ proc print()
 
 let query = args[0]; args.delete(0)
 let lines = read(args).split("\n")
-var indices = getRange(query, lines.len, opts.contains("zero"))
+var indices = getRange(query, lines.len, zero)
 print()
 
 
 proc expandContext() =
   var array: seq[int] = @[]
-  var b = 0; var a = 0;
-  if opts.contains("before"): b = opts["before"].parseInt
-  if opts.contains("after"):  a = opts["after"].parseInt
-  for c in indices:
-    for x in c-b .. c+a:
+  for center in indices:
+    for x in center-before .. center+after:
       array.add(x)
   indices = array
 
 proc print() =
-  if not opts.contains("invert"):
-    if opts.contains("before") or opts.contains("after"):
+  if not invert:
+    if before > 0 or after > 0:
       expandContext()
     for i in indices:
       if i >= 0 and i < lines.len:
         echo lines[i]
   else:
-    if opts.contains("before") or opts.contains("after"):
+    if before > 0 or after > 0:
       expandContext()
     var excludes = initSet[int]()
     for i in indices:
