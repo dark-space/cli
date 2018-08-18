@@ -57,7 +57,6 @@ if args.len < 1:
   args.add(":")
 
 let query = args[0]; args.delete(0)
-echo "query = ", query
 let lines = read(args).split("\n")
 let data = getMatrix(lines, delimiter, regex)
 var indices = getRange(query, data[0].len, zero)
