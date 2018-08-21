@@ -3,13 +3,14 @@ import lib/io
 
 proc usage() =
   let s = """
-Usage: line [OPTION]... PATTERN [FILE]
+Usage: de [OPTION]... PATTERN [FILE]
   -n      : repeat N times.
-  -a=[str]: append removed string to oppoite side with delimiter."""
+  -r      : remain first N islands."""
   echo s
 
 var repeatN = 1
-var append = ""
+var reverse = false
+var trim = false
 
 var args: seq[string] = @[]
 try:
@@ -18,8 +19,8 @@ try:
       args.add(key)
     elif (kind == cmdShortOption and key == "n"):
       repeatN = val.parseInt
-    elif (kind == cmdShortOption and key == "a"):
-      append = if (val.len > 0): val else: "\t"
+    elif (kind == cmdShortOption and key == "r"):
+      reverse = true
     else:
       usage()
       quit(0)
@@ -28,22 +29,41 @@ except:
   quit(1)
 
 let lines = read(args).split("\n")
-if repeatN >= 0:
-  for line in lines:
-    var l = line
-    for i in 1 .. repeatN:
-      l = l.replace(re"^\s*\S+\s*", "")
-    if append.len > 0:
-      var removed = line[..(line.len - l.len - 1)].replace(re"^\s+","").replace(re"\s+$","")
-      l = l & append & removed
-    echo l
+if not reverse:
+  if repeatN >= 0:
+    for line in lines:
+      var l = line
+      for i in 1 .. repeatN:
+        l = l.replace(re"^\s*\S+\s*", "")
+      l = l.replace(re"^\s+","").replace(re"\s+$","")
+      echo l
+  else:
+    for line in lines:
+      var l = line
+      for i in 1 .. -repeatN:
+        l = l.replace(re"\s*\S+\s*$", "")
+      l = l.replace(re"^\s+","").replace(re"\s+$","")
+      echo l
 else:
-  for line in lines:
-    var l = line
-    for i in 1 .. -repeatN:
-      l = l.replace(re"\s*\S+\s*$", "")
-    if append.len > 0:
-      var removed = line[l.len..(line.len-1)].replace(re"^\s+","").replace(re"\s+$","")
-      l = removed & append & l
-    echo l
+  var m: Option[RegexMatch]
+  if repeatN >= 0:
+    for line in lines:
+      var outStr = ""
+      var l = line
+      for i in 1 .. repeatN:
+        m = l.match(re"^(\s*\S+\s*)(.*)$"); if m != none(RegexMatch):
+          outStr &= m.get.captures[0]
+          l = m.get.captures[1]
+      outStr = outStr.replace(re"^\s+","").replace(re"\s+$","")
+      echo outStr
+  else:
+    for line in lines:
+      var outStr = ""
+      var l = line
+      for i in 1 .. -repeatN:
+        m = l.match(re"^(.*?)(\s*\S+\s*)$"); if m != none(RegexMatch):
+          outStr = m.get.captures[1] & outStr
+          l = m.get.captures[0]
+      outStr = outStr.replace(re"^\s+","").replace(re"\s+$","")
+      echo outStr
 
