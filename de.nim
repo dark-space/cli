@@ -10,7 +10,6 @@ Usage: de [OPTION]... PATTERN [FILE]
 
 var repeatN = 1
 var reverse = false
-var trim = false
 
 var args: seq[string] = @[]
 try:
