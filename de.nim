@@ -27,17 +27,16 @@ except:
   usage()
   quit(1)
 
-let lines = read(args).split("\n")
 if not reverse:
   if repeatN >= 0:
-    for line in lines:
+    for line in readLines(args):
       var l = line
       for i in 1 .. repeatN:
         l = l.replace(re"^\s*\S+\s*", "")
       l = l.replace(re"^\s+","").replace(re"\s+$","")
       echo l
   else:
-    for line in lines:
+    for line in readLines(args):
       var l = line
       for i in 1 .. -repeatN:
         l = l.replace(re"\s*\S+\s*$", "")
@@ -46,7 +45,7 @@ if not reverse:
 else:
   var m: Option[RegexMatch]
   if repeatN >= 0:
-    for line in lines:
+    for line in readLines(args):
       var outStr = ""
       var l = line
       for i in 1 .. repeatN:
@@ -56,7 +55,7 @@ else:
       outStr = outStr.replace(re"^\s+","").replace(re"\s+$","")
       echo outStr
   else:
-    for line in lines:
+    for line in readLines(args):
       var outStr = ""
       var l = line
       for i in 1 .. -repeatN:
